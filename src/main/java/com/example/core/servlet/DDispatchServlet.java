@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 /**
  * DispatchServlet
  */
-@WebServlet
+@WebServlet(loadOnStartup = 0, urlPatterns = "/*")
 public class DDispatchServlet extends HttpServlet {
 
     Logger log = Logger.getLogger(this.getClass().getName());
