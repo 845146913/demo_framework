@@ -118,10 +118,10 @@ public class ClassUtils {
      * @param <E>
      * @return
      */
-    public static <E extends Annotation> List<Class<?>> getClassListByAnnotation(String packageName, Class<E> annotation, ConditionCallback action) {
+    public static <E extends Annotation> List<Class<?>> getClassListByAnnotation(String packageName, Class<E> annotation, ConditionCallback<Object> action) {
         return getClassList(packageName).stream()
                 .filter(clz -> clz.isAnnotationPresent(annotation) &&
-                        (action != null ? action.doInCondition() : true))
+                        (action != null ? action.doInCondition(clz) : true))
                 .collect(Collectors.toList());
     }
 
@@ -157,12 +157,8 @@ public class ClassUtils {
         }
     }
 
-    public static void main(String[] args) {
-        List<Class<?>> classList = ClassUtils.getClassListByAnnotation("", Controller.class, null);
-        System.out.println(classList);
-    }
 
-    interface ConditionCallback {
-        boolean doInCondition() throws RuntimeException;
+    public interface ConditionCallback<T> {
+        boolean doInCondition(T o) throws RuntimeException;
     }
 }
