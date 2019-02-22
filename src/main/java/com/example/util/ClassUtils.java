@@ -1,7 +1,5 @@
 package com.example.util;
 
-import com.example.core.annotations.Controller;
-
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.net.JarURLConnection;
@@ -45,7 +43,7 @@ public class ClassUtils {
      */
     private static final ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
 
-    public static ClassLoader getCurrentClassLoader() {
+    public static final ClassLoader getCurrentClassLoader() {
         return currentClassLoader;
     }
 
