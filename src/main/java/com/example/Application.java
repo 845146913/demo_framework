@@ -9,7 +9,7 @@ import java.util.List;
 public class Application {
 
     public static void main(String[] args) {
-        List<Class<?>> classList = ClassUtils.getClassListByAnnotation("", Controller.class, o -> o instanceof Object);
+        List<Class<?>> classList = ClassUtils.getClassListByCondition("", (Class o) -> o.isAnnotationPresent(Controller.class));
         System.out.println(classList);
     }
 }

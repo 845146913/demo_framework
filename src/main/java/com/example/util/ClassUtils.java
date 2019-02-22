@@ -36,8 +36,6 @@ public class ClassUtils {
      * 文件路径分割符：/
      */
     private static final String PATH_SEPARATOR = "/";
-
-
     /**
      * 当前线程的类加载
      */
@@ -108,18 +106,29 @@ public class ClassUtils {
     }
 
     /**
-     * 获取指定包下包含相应注解及附加条件的所有类
+     * 获取指定包下包含相应注解的所有类
      *
      * @param packageName
      * @param annotation
-     * @param action
      * @param <E>
      * @return
      */
-    public static <E extends Annotation> List<Class<?>> getClassListByAnnotation(String packageName, Class<E> annotation, ConditionCallback<Object> action) {
+    public static <E extends Annotation> List<Class<?>> getClassListByAnnotation(String packageName, Class<E> annotation) {
         return getClassList(packageName).stream()
-                .filter(clz -> clz.isAnnotationPresent(annotation) &&
-                        (action != null ? action.doInCondition(clz) : true))
+                .filter(clz -> clz.isAnnotationPresent(annotation))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取指定包下符合自定义条件的所有类
+     *
+     * @param packageName
+     * @param action
+     * @return
+     */
+    public static <T> List<Class<?>> getClassListByCondition(String packageName, ConditionCallback<T> action) {
+        return getClassList(packageName).stream()
+                .filter(clz -> action.doInCondition((T) clz))
                 .collect(Collectors.toList());
     }
 
