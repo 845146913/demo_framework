@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Optional;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Logger;
@@ -41,16 +42,16 @@ public class ClassUtils {
      */
     private static final ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
 
-    public static final ClassLoader getCurrentClassLoader() {
+    private static ClassLoader getCurrentClassLoader() {
         return currentClassLoader;
     }
 
     /**
      * 加载类
      *
-     * @param className
-     * @param initialize
-     * @return
+     * @param className  类名 com.example.XX
+     * @param initialize true or false
+     * @return cls
      */
     public static Class<?> loadClass(String className, Boolean initialize) {
         Class<?> clazz;
@@ -66,8 +67,8 @@ public class ClassUtils {
     /**
      * 获取包下的所有类
      *
-     * @param packageName
-     * @return
+     * @param packageName 包名
+     * @return clz
      */
     public static List<Class<?>> getClassList(String packageName) {
         List<Class<?>> classList = new ArrayList<>();
@@ -108,10 +109,10 @@ public class ClassUtils {
     /**
      * 获取指定包下包含相应注解的所有类
      *
-     * @param packageName
-     * @param annotation
-     * @param <E>
-     * @return
+     * @param packageName baoming
+     * @param annotation  注解类clz
+     * @param <E>         cls
+     * @return clz
      */
     public static <E extends Annotation> List<Class<?>> getClassListByAnnotation(String packageName, Class<E> annotation) {
         return getClassList(packageName).stream()
@@ -122,10 +123,11 @@ public class ClassUtils {
     /**
      * 获取指定包下符合自定义条件的所有类
      *
-     * @param packageName
-     * @param action
-     * @return
+     * @param packageName 包名
+     * @param action      条件回调类
+     * @return clz
      */
+    @SuppressWarnings("unchecked")
     public static <T> List<Class<?>> getClassListByCondition(String packageName, ConditionCallback<T> action) {
         return getClassList(packageName).stream()
                 .filter(clz -> action.doInCondition((T) clz))
@@ -135,30 +137,31 @@ public class ClassUtils {
     /**
      * 添加类【递归】
      *
-     * @param classList
-     * @param packagePath
+     * @param classList   类
+     * @param packagePath 包路径
      */
     private static void addClass(List<Class<?>> classList, String packagePath, String packageName) {
         try {
             File dir = new File(packagePath);
             // 所有的class类和文件夹
-            File[] files = dir.listFiles(file -> file.isFile() && file.getName().endsWith(CLASS_FILE_SUFFIX) || file.isDirectory());
-            for (File file : files) {
-                String fileName = file.getName();
-                if (file.isFile()) {
-                    // 是类名
-                    String className = fileName.substring(0, fileName.lastIndexOf(CLASS_FILE_POINT));
-                    if (null != className && !"".equals(className)) {
-                        className = packageName + PACKAGE_FILE_POINT + className;
+            Optional<File[]> files = Optional.ofNullable(dir.listFiles(file -> file.isFile() && file.getName().endsWith(CLASS_FILE_SUFFIX) || file.isDirectory()));
+            if (files.isPresent())
+                for (File file : files.get()) {
+                    String fileName = file.getName();
+                    if (file.isFile()) {
+                        // 是类名
+                        String className = fileName.substring(0, fileName.lastIndexOf(CLASS_FILE_POINT));
+                        if (!"".equals(className)) {
+                            className = packageName + PACKAGE_FILE_POINT + className;
+                        }
+                        Class<?> aClass = loadClass(className, false);
+                        classList.add(aClass);
+                    } else {
+                        String subpackagePath = packagePath + (packagePath.endsWith(PATH_SEPARATOR) ? "" : PATH_SEPARATOR) + fileName;
+                        String subpackageName = packageName + (!packageName.equals("") ? PACKAGE_FILE_POINT : "") + fileName;
+                        addClass(classList, subpackagePath, subpackageName);
                     }
-                    Class<?> aClass = loadClass(className, false);
-                    classList.add(aClass);
-                } else {
-                    String subpackagePath = packagePath + (packagePath.endsWith(PATH_SEPARATOR) ? "" : PATH_SEPARATOR) + fileName;
-                    String subpackageName = packageName + (null != packageName && !packageName.equals("") ? PACKAGE_FILE_POINT : "") + fileName;
-                    addClass(classList, subpackagePath, subpackageName);
                 }
-            }
         } catch (Exception e) {
             log.info("类添加失败");
         }
