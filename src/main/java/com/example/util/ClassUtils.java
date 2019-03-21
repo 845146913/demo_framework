@@ -4,10 +4,7 @@ import java.io.File;
 import java.lang.annotation.Annotation;
 import java.net.JarURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Logger;
@@ -96,6 +93,10 @@ public class ClassUtils {
                             JarEntry jarEntry = jarEntryEnumeration.nextElement();
                             String jarEntryName = jarEntry.getName();
                             log.info("jar entryName: " + jarEntryName);
+                            if (jarEntryName.endsWith(".class")){
+                                String className= jarEntryName.substring(0,jarEntryName.lastIndexOf(".")).replaceAll("/",".");
+                                doAddClass(classList,className);
+                            }
                         }
                     }
                 }
@@ -154,8 +155,7 @@ public class ClassUtils {
                         if (!"".equals(className)) {
                             className = packageName + PACKAGE_FILE_POINT + className;
                         }
-                        Class<?> aClass = loadClass(className, false);
-                        classList.add(aClass);
+                        doAddClass(classList, className);
                     } else {
                         String subpackagePath = packagePath + (packagePath.endsWith(PATH_SEPARATOR) ? "" : PATH_SEPARATOR) + fileName;
                         String subpackageName = packageName + (!packageName.equals("") ? PACKAGE_FILE_POINT : "") + fileName;
@@ -165,6 +165,11 @@ public class ClassUtils {
         } catch (Exception e) {
             log.info("类添加失败");
         }
+    }
+
+    private static void doAddClass(Collection<Class<?>> classSet, String className) {
+        Class<?> cls = loadClass(className, false);
+        classSet.add(cls);
     }
 
 
