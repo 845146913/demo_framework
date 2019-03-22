@@ -1,9 +1,14 @@
 package com.example.util;
 
+import com.sun.istack.internal.NotNull;
+
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.JarURLConnection;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -82,7 +87,9 @@ public class ClassUtils {
                     String protocol = url.getProtocol();
                     if ("file".equals(protocol)) {
                         // 若在 class 目录,添加类
-                        String packagePath = url.getPath().replaceAll("%20", " ");
+                        String path = url.getPath();
+                        path = URLDecoder.decode(path, "UTF-8"); //防止解析中文路径出现报错
+                        String packagePath = path.replaceAll("%20", " ");
                         addClass(classList, packagePath, packageName);
                     } else if ("jar".equals(protocol)) {
                         // TODO 若在 jar 包中,则解析 jar 包中的 entry
@@ -170,6 +177,26 @@ public class ClassUtils {
     private static void doAddClass(Collection<Class<?>> classSet, String className) {
         Class<?> cls = loadClass(className, false);
         classSet.add(cls);
+    }
+
+    /**
+     * 获取特定类方法
+     * @param method 源方法名
+     * @param targetClass 目标类
+     * @return 目标类方法
+     */
+    public static Method getSpecificMethod(Method method, @NotNull Class<?> targetClass){
+        if(targetClass != null && targetClass != method.getDeclaringClass()){
+            if(Modifier.isPublic(method.getModifiers())){
+                try {
+                    return targetClass.getMethod(method.getName(), method.getParameterTypes());
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                    return method;
+                }
+            }
+        }
+        return method;
     }
 
 
